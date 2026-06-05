@@ -29,12 +29,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/invoices", invoiceStatusRoutes);
 
 const PORT = process.env.PORT || 4000;
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
 });
-
-const suppliersRoutes = require("./routes/suppliers.routes");
-app.use("/api/suppliers", suppliersRoutes);
-
-const invoicesRoutes = require("./routes/invoices.routes");
-app.use("/api/invoices", invoicesRoutes);
