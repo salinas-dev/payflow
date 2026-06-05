@@ -6,6 +6,7 @@ function Suppliers() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [editingId, setEditingId] = useState(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -22,12 +23,29 @@ function Suppliers() {
     try {
       setLoading(true);
       const response = await api.get("/suppliers");
-      setSuppliers(response.data || []);
+
+      const activeSuppliers = (response.data || []).filter(
+        (supplier) => supplier.active,
+      );
+
+      setSuppliers(activeSuppliers);
     } catch (error) {
       console.error(error);
+      alert("Error al cargar proveedores");
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetForm = () => {
+    setForm({
+      name: "",
+      rfc: "",
+      email: "",
+      phone: "",
+    });
+    setEditingId(null);
+    setError("");
   };
 
   const handleChange = (e) => {
@@ -37,26 +55,60 @@ function Suppliers() {
     });
   };
 
-  const createSupplier = async (e) => {
+  const saveSupplier = async (e) => {
     e.preventDefault();
     setError("");
     setSaving(true);
 
     try {
-      await api.post("/suppliers", form);
+      if (editingId) {
+        await api.put(`/suppliers/${editingId}`, form);
+      } else {
+        await api.post("/suppliers", form);
+      }
 
-      setForm({
-        name: "",
-        rfc: "",
-        email: "",
-        phone: "",
-      });
-
+      resetForm();
       await loadSuppliers();
     } catch (error) {
-      setError(error.response?.data?.message || "Error al crear proveedor");
+      setError(
+        error.response?.data?.message ||
+          (editingId
+            ? "Error al actualizar proveedor"
+            : "Error al crear proveedor"),
+      );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const editSupplier = (supplier) => {
+    setEditingId(supplier.id);
+    setForm({
+      name: supplier.name || "",
+      rfc: supplier.rfc || "",
+      email: supplier.email || "",
+      phone: supplier.phone || "",
+    });
+    setError("");
+  };
+
+  const deleteSupplier = async (id) => {
+    const confirmed = window.confirm(
+      "¿Seguro que deseas eliminar este proveedor?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/suppliers/${id}`);
+      await loadSuppliers();
+
+      if (editingId === id) {
+        resetForm();
+      }
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Error al eliminar proveedor");
     }
   };
 
@@ -67,8 +119,8 @@ function Suppliers() {
       <h1 className="text-3xl font-bold mb-6">Proveedores</h1>
 
       <form
-        onSubmit={createSupplier}
-        className="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-6 grid grid-cols-1 md:grid-cols-5 gap-4"
+        onSubmit={saveSupplier}
+        className="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-6 grid grid-cols-1 md:grid-cols-6 gap-4"
       >
         <input
           name="name"
@@ -76,6 +128,7 @@ function Suppliers() {
           onChange={handleChange}
           placeholder="Nombre"
           className="bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 outline-none focus:border-blue-500"
+          required
         />
 
         <input
@@ -104,13 +157,27 @@ function Suppliers() {
 
         <button
           disabled={saving}
-          className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-lg px-4 py-3 font-semibold"
+          className={`rounded-lg px-4 py-3 font-semibold disabled:opacity-60 ${
+            editingId
+              ? "bg-yellow-600 hover:bg-yellow-700"
+              : "bg-blue-600 hover:bg-blue-700"
+          }`}
         >
-          {saving ? "Guardando..." : "Crear"}
+          {saving ? "Guardando..." : editingId ? "Actualizar" : "Crear"}
         </button>
 
+        {editingId && (
+          <button
+            type="button"
+            onClick={resetForm}
+            className="bg-slate-700 hover:bg-slate-600 rounded-lg px-4 py-3 font-semibold"
+          >
+            Cancelar
+          </button>
+        )}
+
         {error && (
-          <div className="md:col-span-5 text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
+          <div className="md:col-span-6 text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
             {error}
           </div>
         )}
@@ -125,6 +192,7 @@ function Suppliers() {
               <th className="p-4">Email</th>
               <th className="p-4">Teléfono</th>
               <th className="p-4">Estado</th>
+              <th className="p-4">Acciones</th>
             </tr>
           </thead>
 
@@ -132,13 +200,36 @@ function Suppliers() {
             {suppliers.map((supplier) => (
               <tr key={supplier.id} className="border-t border-slate-800">
                 <td className="p-4">{supplier.name}</td>
-                <td className="p-4">{supplier.rfc}</td>
-                <td className="p-4">{supplier.email}</td>
+                <td className="p-4">{supplier.rfc || "-"}</td>
+                <td className="p-4">{supplier.email || "-"}</td>
                 <td className="p-4">{supplier.phone || "-"}</td>
                 <td className="p-4">
-                  <span className="rounded-full bg-green-500/10 text-green-300 px-3 py-1 text-sm">
+                  <span
+                    className={`rounded-full px-3 py-1 text-sm ${
+                      supplier.active
+                        ? "bg-green-500/10 text-green-300"
+                        : "bg-slate-500/10 text-slate-300"
+                    }`}
+                  >
                     {supplier.active ? "Activo" : "Inactivo"}
                   </span>
+                </td>
+                <td className="p-4">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => editSupplier(supplier)}
+                      className="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded text-sm"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      onClick={() => deleteSupplier(supplier.id)}
+                      className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
