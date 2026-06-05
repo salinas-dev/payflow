@@ -24,7 +24,7 @@ const getInvoices = async (req, res) => {
        INNER JOIN suppliers s ON s.id = i.supplier_id
        WHERE i.company_id = $1
        ORDER BY i.id DESC`,
-      [req.user.company_id]
+      [req.user.company_id],
     );
 
     res.json(result.rows);
@@ -58,7 +58,7 @@ const getInvoiceById = async (req, res) => {
        INNER JOIN suppliers s ON s.id = i.supplier_id
        WHERE i.id = $1
        AND i.company_id = $2`,
-      [req.params.id, req.user.company_id]
+      [req.params.id, req.user.company_id],
     );
 
     if (result.rows.length === 0) {
@@ -100,7 +100,7 @@ const createInvoice = async (req, res) => {
        WHERE id = $1 
        AND company_id = $2 
        AND active = TRUE`,
-      [supplier_id, req.user.company_id]
+      [supplier_id, req.user.company_id],
     );
 
     if (supplierExists.rows.length === 0) {
@@ -139,7 +139,7 @@ const createInvoice = async (req, res) => {
         status || "PENDING",
         pdf_url || null,
         xml_url || null,
-      ]
+      ],
     );
 
     res.status(201).json({
@@ -200,7 +200,7 @@ const updateInvoice = async (req, res) => {
         xml_url,
         req.params.id,
         req.user.company_id,
-      ]
+      ],
     );
 
     if (result.rows.length === 0) {
@@ -228,7 +228,7 @@ const deleteInvoice = async (req, res) => {
        FROM invoices
        WHERE id = $1
        AND company_id = $2`,
-      [id, req.user.company_id]
+      [id, req.user.company_id],
     );
 
     if (invoiceResult.rows.length === 0) {
@@ -243,7 +243,7 @@ const deleteInvoice = async (req, res) => {
       const pdfPath = path.join(
         __dirname,
         "../../",
-        invoice.pdf_url.replace(/^\//, "")
+        invoice.pdf_url.replace(/^\//, ""),
       );
 
       if (fs.existsSync(pdfPath)) {
@@ -255,7 +255,7 @@ const deleteInvoice = async (req, res) => {
       const xmlPath = path.join(
         __dirname,
         "../../",
-        invoice.xml_url.replace(/^\//, "")
+        invoice.xml_url.replace(/^\//, ""),
       );
 
       if (fs.existsSync(xmlPath)) {
@@ -267,7 +267,7 @@ const deleteInvoice = async (req, res) => {
       `DELETE FROM invoices
        WHERE id = $1
        AND company_id = $2`,
-      [id, req.user.company_id]
+      [id, req.user.company_id],
     );
 
     res.json({
@@ -300,7 +300,7 @@ const uploadInvoiceFile = async (req, res) => {
        FROM invoices
        WHERE id = $1
        AND company_id = $2`,
-      [id, req.user.company_id]
+      [id, req.user.company_id],
     );
 
     if (invoiceExists.rows.length === 0) {
@@ -318,7 +318,7 @@ const uploadInvoiceFile = async (req, res) => {
        WHERE id = $2
        AND company_id = $3
        RETURNING *`,
-      [filePath, id, req.user.company_id]
+      [filePath, id, req.user.company_id],
     );
 
     res.json({
@@ -326,10 +326,16 @@ const uploadInvoiceFile = async (req, res) => {
       invoice: result.rows[0],
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Error al subir archivo",
-      error: error.message,
-    });
+    console.error("UPLOAD ERROR", error);
+
+    console.log(error.response);
+    console.log(error.response?.data);
+
+    alert(
+      error.response?.data?.message ||
+        JSON.stringify(error.response?.data) ||
+        error.message,
+    );
   }
 };
 
