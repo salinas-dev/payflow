@@ -17,6 +17,6 @@ router.get("/", getInvoices);
 router.get("/:id", getInvoiceById);
 router.post("/", createInvoice);
 router.put("/:id", updateInvoice);
-router.delete("/:id", deleteInvoice);
+router.delete("/:id", authMiddleware, deleteInvoice);
 
 module.exports = router;

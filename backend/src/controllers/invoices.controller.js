@@ -1,4 +1,6 @@
 const pool = require("../config/db");
+const fs = require("fs");
+const path = require("path");
 
 const getInvoices = async (req, res) => {
   try {
@@ -219,26 +221,61 @@ const updateInvoice = async (req, res) => {
 
 const deleteInvoice = async (req, res) => {
   try {
-    const result = await pool.query(
-      `UPDATE invoices
-       SET status = 'CANCELLED'
+    const { id } = req.params;
+
+    const invoiceResult = await pool.query(
+      `SELECT *
+       FROM invoices
        WHERE id = $1
-       AND company_id = $2
-       RETURNING id, status`,
-      [req.params.id, req.user.company_id]
+       AND company_id = $2`,
+      [id, req.user.company_id]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Factura no encontrada" });
+    if (invoiceResult.rows.length === 0) {
+      return res.status(404).json({
+        message: "Factura no encontrada",
+      });
     }
 
+    const invoice = invoiceResult.rows[0];
+
+    if (invoice.pdf_url) {
+      const pdfPath = path.join(
+        __dirname,
+        "../../",
+        invoice.pdf_url.replace(/^\//, "")
+      );
+
+      if (fs.existsSync(pdfPath)) {
+        fs.unlinkSync(pdfPath);
+      }
+    }
+
+    if (invoice.xml_url) {
+      const xmlPath = path.join(
+        __dirname,
+        "../../",
+        invoice.xml_url.replace(/^\//, "")
+      );
+
+      if (fs.existsSync(xmlPath)) {
+        fs.unlinkSync(xmlPath);
+      }
+    }
+
+    await pool.query(
+      `DELETE FROM invoices
+       WHERE id = $1
+       AND company_id = $2`,
+      [id, req.user.company_id]
+    );
+
     res.json({
-      message: "Factura cancelada correctamente",
-      invoice: result.rows[0],
+      message: "Factura eliminada correctamente",
     });
   } catch (error) {
     res.status(500).json({
-      message: "Error al cancelar factura",
+      message: "Error al eliminar factura",
       error: error.message,
     });
   }
