@@ -353,37 +353,39 @@ function Invoices() {
                       : "-"}
                   </td>
                   <td className="p-4">
-                    <label className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm cursor-pointer">
-                      Subir
-                      <input
-                        type="file"
-                        accept=".pdf,.xml"
-                        className="hidden"
-                        onChange={(e) => handleFileChange(invoice.id, e)}
-                      />
-                    </label>
+                    <div className="flex items-center gap-2">
+                      <label className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm cursor-pointer">
+                        Subir
+                        <input
+                          type="file"
+                          accept=".pdf,.xml"
+                          className="hidden"
+                          onChange={(e) => handleFileChange(invoice.id, e)}
+                        />
+                      </label>
 
-                    {invoice.pdf_url && (
-                      <a
-                        href={`http://localhost:4000${invoice.pdf_url}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="ml-2 text-blue-300 underline text-sm"
-                      >
-                        PDF
-                      </a>
-                    )}
+                      {invoice.pdf_url && (
+                        <a
+                          href={`http://localhost:4000${invoice.pdf_url}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded text-sm"
+                        >
+                          Ver PDF
+                        </a>
+                      )}
 
-                    {invoice.xml_url && (
-                      <a
-                        href={`http://localhost:4000${invoice.xml_url}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="ml-2 text-green-300 underline text-sm"
-                      >
-                        XML
-                      </a>
-                    )}
+                      {invoice.xml_url && (
+                        <a
+                          href={`http://localhost:4000${invoice.xml_url}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="bg-emerald-700 hover:bg-emerald-600 px-3 py-1 rounded text-sm"
+                        >
+                          Ver XML
+                        </a>
+                      )}
+                    </div>
                   </td>
                   <td className="p-4">
                     <div className="flex gap-2">
