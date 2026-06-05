@@ -24,5 +24,7 @@ app.listen(PORT, "0.0.0.0", () => {
 });
 
 const suppliersRoutes = require("./routes/suppliers.routes");
-
 app.use("/api/suppliers", suppliersRoutes);
+
+const dashboardRoutes = require("./routes/dashboard.routes");
+app.use("/api/dashboard", dashboardRoutes);
