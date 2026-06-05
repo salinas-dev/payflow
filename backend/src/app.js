@@ -8,6 +8,7 @@ const suppliersRoutes = require("./routes/suppliers.routes");
 const invoicesRoutes = require("./routes/invoices.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const invoiceStatusRoutes = require("./routes/invoice-status.routes");
+const invoicesListRoutes = require("./routes/invoices-list.routes");
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api/suppliers", suppliersRoutes);
 app.use("/api/invoices", invoicesRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/invoices", invoiceStatusRoutes);
+app.use("/api/invoices-list", invoicesListRoutes);
 
 const PORT = process.env.PORT || 4000;
 
