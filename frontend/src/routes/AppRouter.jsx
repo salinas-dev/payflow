@@ -1,15 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
+import Invoices from "../pages/Invoices";
+import Suppliers from "../pages/Suppliers";
+import AppLayout from "../layouts/AppLayout";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("payflow_token");
-
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
+  return token ? children : <Navigate to="/login" replace />;
 }
 
 function AppRouter() {
@@ -19,15 +17,18 @@ function AppRouter() {
         <Route path="/login" element={<Login />} />
 
         <Route
-          path="/dashboard"
           element={
             <PrivateRoute>
-              <Dashboard />
+              <AppLayout />
             </PrivateRoute>
           }
-        />
+        >
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/suppliers" element={<Suppliers />} />
+        </Route>
 
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   );
