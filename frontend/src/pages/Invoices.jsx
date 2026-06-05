@@ -151,7 +151,9 @@ function Invoices() {
   };
 
   const deleteInvoice = async (id) => {
-    const confirmed = window.confirm("¿Seguro que deseas eliminar esta factura?");
+    const confirmed = window.confirm(
+      "¿Seguro que deseas eliminar esta factura?",
+    );
 
     if (!confirmed) return;
 
@@ -162,6 +164,41 @@ function Invoices() {
       console.error(error);
       alert("Error al eliminar factura");
     }
+  };
+
+  const uploadInvoiceFile = async (invoiceId, file, type = "PDF") => {
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("type", type);
+    formData.append("file", file);
+
+    try {
+      await api.post(`/invoices/${invoiceId}/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      await loadInvoices();
+      alert("Archivo subido correctamente");
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Error al subir archivo");
+    }
+  };
+
+  const handleFileChange = (invoiceId, e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    const extension = file.name.split(".").pop().toLowerCase();
+    const type = extension === "xml" ? "XML" : "PDF";
+
+    uploadInvoiceFile(invoiceId, file, type);
+
+    e.target.value = "";
   };
 
   return (
@@ -288,6 +325,7 @@ function Invoices() {
                 <th className="p-4">Estado</th>
                 <th className="p-4">Total</th>
                 <th className="p-4">Pago</th>
+                <th className="p-4">Archivo</th>
                 <th className="p-4">Acciones</th>
               </tr>
             </thead>
@@ -300,7 +338,7 @@ function Invoices() {
                   <td className="p-4">
                     <span
                       className={`rounded-full px-3 py-1 text-sm ${getStatusClass(
-                        invoice.status
+                        invoice.status,
                       )}`}
                     >
                       {invoice.status}
@@ -309,8 +347,43 @@ function Invoices() {
                   <td className="p-4">{formatMoney(invoice.total)}</td>
                   <td className="p-4">
                     {invoice.payment_date
-                      ? new Date(invoice.payment_date).toLocaleDateString("es-MX")
+                      ? new Date(invoice.payment_date).toLocaleDateString(
+                          "es-MX",
+                        )
                       : "-"}
+                  </td>
+                  <td className="p-4">
+                    <label className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm cursor-pointer">
+                      Subir
+                      <input
+                        type="file"
+                        accept=".pdf,.xml"
+                        className="hidden"
+                        onChange={(e) => handleFileChange(invoice.id, e)}
+                      />
+                    </label>
+
+                    {invoice.pdf_url && (
+                      <a
+                        href={`http://localhost:4000${invoice.pdf_url}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="ml-2 text-blue-300 underline text-sm"
+                      >
+                        PDF
+                      </a>
+                    )}
+
+                    {invoice.xml_url && (
+                      <a
+                        href={`http://localhost:4000${invoice.xml_url}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="ml-2 text-green-300 underline text-sm"
+                      >
+                        XML
+                      </a>
+                    )}
                   </td>
                   <td className="p-4">
                     <div className="flex gap-2">
