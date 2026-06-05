@@ -26,3 +26,7 @@ app.listen(PORT, "0.0.0.0", () => {
 const suppliersRoutes = require("./routes/suppliers.routes");
 
 app.use("/api/suppliers", suppliersRoutes);
+
+const invoiceStatusRoutes = require("./routes/invoice-status.routes");
+
+app.use("/api/invoices", invoiceStatusRoutes);
