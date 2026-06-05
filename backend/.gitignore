@@ -17,3 +17,5 @@ coverage/
 
 .vscode/
 
+backend/uploads/invoices/*
+!backend/uploads/invoices/.gitkeep
