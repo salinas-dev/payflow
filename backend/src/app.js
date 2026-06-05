@@ -27,3 +27,6 @@ app.use("/api/suppliers", suppliersRoutes);
 
 const invoicesRoutes = require("./routes/invoices.routes");
 app.use("/api/invoices", invoicesRoutes);
+
+const path = require("path");
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));

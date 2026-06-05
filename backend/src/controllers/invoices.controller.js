@@ -244,10 +244,62 @@ const deleteInvoice = async (req, res) => {
   }
 };
 
+
+const uploadInvoiceFile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Archivo requerido" });
+    }
+
+    if (!["PDF", "XML"].includes(type)) {
+      return res.status(400).json({ message: "Tipo inválido. Usa PDF o XML" });
+    }
+
+    const invoiceExists = await pool.query(
+      `SELECT id
+       FROM invoices
+       WHERE id = $1
+       AND company_id = $2`,
+      [id, req.user.company_id]
+    );
+
+    if (invoiceExists.rows.length === 0) {
+      return res.status(404).json({ message: "Factura no encontrada" });
+    }
+
+    const filePath = `/uploads/invoices/${req.file.filename}`;
+
+    const field = type === "PDF" ? "pdf_url" : "xml_url";
+
+    const result = await pool.query(
+      `UPDATE invoices
+       SET ${field} = $1
+       WHERE id = $2
+       AND company_id = $3
+       RETURNING *`,
+      [filePath, id, req.user.company_id]
+    );
+
+    res.json({
+      message: `Archivo ${type} subido correctamente`,
+      invoice: result.rows[0],
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error al subir archivo",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getInvoices,
   getInvoiceById,
   createInvoice,
   updateInvoice,
   deleteInvoice,
+  uploadInvoiceFile,
 };
