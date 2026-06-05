@@ -4,8 +4,7 @@ const getInvoicesList = async (req, res) => {
   try {
     const companyId = req.user.company_id;
 
-    const status = req.query.status || null;
-    const supplierId = req.query.supplier_id || null;
+    const { status, supplier_id, folio, date_from, date_to } = req.query;
 
     const page = Math.max(parseInt(req.query.page || "1", 10), 1);
     const limit = Math.min(Math.max(parseInt(req.query.limit || "10", 10), 1), 100);
@@ -19,9 +18,24 @@ const getInvoicesList = async (req, res) => {
       filters.push(`i.status = $${values.length}`);
     }
 
-    if (supplierId) {
-      values.push(supplierId);
+    if (supplier_id) {
+      values.push(supplier_id);
       filters.push(`i.supplier_id = $${values.length}`);
+    }
+
+    if (folio) {
+      values.push(`%${folio}%`);
+      filters.push(`i.folio ILIKE $${values.length}`);
+    }
+
+    if (date_from) {
+      values.push(date_from);
+      filters.push(`i.issue_date >= $${values.length}`);
+    }
+
+    if (date_to) {
+      values.push(date_to);
+      filters.push(`i.issue_date <= $${values.length}`);
     }
 
     const whereClause = filters.join(" AND ");
@@ -71,6 +85,13 @@ const getInvoicesList = async (req, res) => {
       limit,
       total,
       pages,
+      filters: {
+        status: status || null,
+        supplier_id: supplier_id || null,
+        folio: folio || null,
+        date_from: date_from || null,
+        date_to: date_to || null,
+      },
       data: result.rows,
     });
   } catch (error) {
